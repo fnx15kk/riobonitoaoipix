@@ -36,9 +36,16 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
 
       console.log("[v0] Resposta da API:", response.status)
 
+      const contentType = response.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("[v0] Resposta não é JSON:", contentType)
+        const text = await response.text()
+        throw new Error(`Resposta inválida do servidor: ${text.substring(0, 100)}`)
+      }
+
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || "Erro ao gerar QR code")
+        throw new Error(errorData.error || `Erro ${response.status}`)
       }
 
       const data = await response.json()
