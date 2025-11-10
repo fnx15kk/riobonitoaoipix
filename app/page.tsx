@@ -111,7 +111,6 @@ export default function Home() {
               {donationAmounts.map((amount) => (
                 <button
                   key={amount}
-                  onClick={() => (window.location.href = checkoutLinks[amount])}
                   className="py-3 px-2 border-2 border-gray-300 rounded-xl font-bold text-gray-900 text-xs sm:text-sm hover:border-green-500 hover:text-green-500 transition-colors"
                 >
                   R$ {amount}
@@ -120,10 +119,7 @@ export default function Home() {
             </div>
 
             {/* Custom amount button */}
-            <button
-              onClick={() => (window.location.href = checkoutLinks.custom)}
-              className="w-full py-3 px-4 border-2 border-green-500 border-dashed rounded-xl font-bold text-green-500 hover:bg-green-50 transition-colors mb-4 text-sm sm:text-base"
-            >
+            <button className="w-full py-3 px-4 border-2 border-green-500 border-dashed rounded-xl font-bold text-green-500 hover:bg-green-50 transition-colors mb-4 text-sm sm:text-base">
               Doar Agora
             </button>
           </div>
