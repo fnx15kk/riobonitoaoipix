@@ -1,7 +1,8 @@
 "use client"
 
-import { Heart, Share2, ThumbsUp, X, Users } from "lucide-react"
+import { Heart, Share2, ThumbsUp, Users } from "lucide-react"
 import { useState, useEffect } from "react"
+import { DonationModal } from "@/components/donation-modal"
 
 export default function Home() {
   const [showDonationModal, setShowDonationModal] = useState(false)
@@ -75,56 +76,11 @@ export default function Home() {
         </div>
       )}
 
-      {showDonationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 sm:p-8 w-full max-w-md shadow-xl relative">
-            {/* Close button */}
-            <button
-              onClick={() => setShowDonationModal(false)}
-              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            {/* Logo and header */}
-            <div className="flex items-center gap-3 mb-6">
-              <img
-                src="/images/design-mode/Captura%20de%20Tela%202025-11-09%20a%CC%80s%2013.48.20(1).png"
-                alt="Canil Patas Seguras"
-                className="w-12 h-12 rounded-full object-cover"
-              />
-              <span className="font-bold text-lg text-gray-900">Instituição Salva e Protege </span>
-            </div>
-
-            {/* Title */}
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 text-center">
-              Doe o valor que o seu coração mandar! ❤️
-            </h2>
-
-            {/* Subtitle */}
-            <p className="text-center font-bold text-gray-900 mb-6 uppercase text-xs sm:text-sm">
-              Qual valor você deseja doar?
-            </p>
-
-            {/* Amount buttons grid */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              {donationAmounts.map((amount) => (
-                <button
-                  key={amount}
-                  className="py-3 px-2 border-2 border-gray-300 rounded-xl font-bold text-gray-900 text-xs sm:text-sm hover:border-green-500 hover:text-green-500 transition-colors"
-                >
-                  R$ {amount}
-                </button>
-              ))}
-            </div>
-
-            {/* Custom amount button */}
-            <button className="w-full py-3 px-4 border-2 border-green-500 border-dashed rounded-xl font-bold text-green-500 hover:bg-green-50 transition-colors mb-4 text-sm sm:text-base">
-              Doar Agora
-            </button>
-          </div>
-        </div>
-      )}
+      <DonationModal
+        isOpen={showDonationModal}
+        onClose={() => setShowDonationModal(false)}
+        donationAmounts={donationAmounts}
+      />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Hero Section */}
