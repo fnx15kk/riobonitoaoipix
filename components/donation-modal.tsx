@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, Copy, Check } from "lucide-react"
+import { X, Copy, Check, AlertCircle, Loader } from "lucide-react"
 
 interface DonationModalProps {
   isOpen: boolean
@@ -15,14 +15,17 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
   const [qrCode, setQrCode] = useState<string | null>(null)
   const [pixKey, setPixKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
   const handleSelectAmount = async (amount: number) => {
+    console.log("[v0] Selecionado valor:", amount)
     setSelectedAmount(amount)
     setCustomAmount("")
     setLoading(true)
     setQrCode(null)
     setPixKey(null)
+    setError(null)
 
     try {
       const response = await fetch("/api/mangofy/create-pix", {
@@ -31,14 +34,22 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
         body: JSON.stringify({ amount }),
       })
 
-      if (!response.ok) throw new Error("Erro ao gerar QR code")
+      console.log("[v0] Resposta da API:", response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Erro ao gerar QR code")
+      }
 
       const data = await response.json()
+      console.log("[v0] Dados recebidos:", data)
+
       setQrCode(data.qrCode)
       setPixKey(data.pixKey)
-    } catch (error) {
-      console.error("[v0] Erro:", error)
-      alert("Erro ao gerar QR code. Tente novamente.")
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Erro desconhecido"
+      console.error("[v0] Erro:", errorMsg)
+      setError(errorMsg)
       setSelectedAmount(null)
     } finally {
       setLoading(false)
@@ -49,7 +60,7 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
     const amountNum = Number.parseFloat(customAmount)
 
     if (!customAmount || amountNum < 1) {
-      alert("Por favor, insira um valor maior que R$ 1,00")
+      setError("Por favor, insira um valor maior que R$ 1,00")
       return
     }
 
@@ -78,7 +89,7 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
         <div className="flex items-center gap-3 mb-6">
           <img
             src="/images/design-mode/Captura%20de%20Tela%202025-11-09%20a%CC%80s%2013.48.20(1).png"
-            alt="Canil Patas Seguras"
+            alt="Instituição Salva e Protege"
             className="w-12 h-12 rounded-full object-cover"
           />
           <span className="font-bold text-lg text-gray-900">Instituição Salva e Protege</span>
@@ -93,6 +104,14 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
         <p className="text-center font-bold text-gray-900 mb-6 uppercase text-xs sm:text-sm">
           {qrCode ? "Escaneie o QR code com seu banco" : "Qual valor você deseja doar?"}
         </p>
+
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex gap-2">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
 
         {!qrCode ? (
           <>
@@ -122,15 +141,16 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
                     value={customAmount}
                     onChange={(e) => setCustomAmount(e.target.value)}
                     placeholder="Ex: 25"
-                    className="w-full pl-8 pr-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-green-500 focus:outline-none"
+                    disabled={loading}
+                    className="w-full pl-8 pr-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-green-500 focus:outline-none disabled:opacity-50"
                   />
                 </div>
                 <button
                   onClick={handleCustomAmount}
                   disabled={loading}
-                  className="px-4 py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="px-4 py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2"
                 >
-                  Doar
+                  {loading ? <Loader className="w-4 h-4 animate-spin" /> : "Doar"}
                 </button>
               </div>
             </div>
@@ -147,10 +167,13 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
                   src={qrCode || "/placeholder.svg"}
                   alt="QR Code PIX"
                   className="w-48 h-48 border-4 border-green-500 rounded-lg"
+                  onError={(e) => {
+                    console.error("[v0] Erro ao carregar imagem QR:", e)
+                  }}
                 />
               )}
               <p className="text-center text-sm text-gray-600 mt-4">
-                Valor: <span className="font-bold text-lg text-green-500">R$ {selectedAmount}</span>
+                Valor: <span className="font-bold text-lg text-green-500">R$ {selectedAmount?.toFixed(2)}</span>
               </p>
             </div>
 
@@ -163,7 +186,7 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
                     type="text"
                     value={pixKey}
                     readOnly
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs bg-gray-50"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs bg-gray-50 font-mono"
                   />
                   <button
                     onClick={copyPixKey}
@@ -182,6 +205,7 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
                 setPixKey(null)
                 setSelectedAmount(null)
                 setCustomAmount("")
+                setError(null)
               }}
               className="w-full py-3 px-4 border-2 border-gray-300 rounded-xl font-bold text-gray-900 hover:bg-gray-50 transition-colors text-sm sm:text-base"
             >
@@ -190,9 +214,12 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
           </>
         )}
 
-        {loading && (
+        {loading && !error && (
           <div className="text-center mt-4">
-            <p className="text-sm text-gray-600">Gerando QR code...</p>
+            <div className="flex items-center justify-center gap-2">
+              <Loader className="w-4 h-4 animate-spin text-green-500" />
+              <p className="text-sm text-gray-600">Gerando QR code...</p>
+            </div>
           </div>
         )}
       </div>
