@@ -22,11 +22,16 @@ function PixCheckout() {
     }));
   };
 
+  // Função para gerar o pagamento via PIX
   const handleGeneratePix = async () => {
+    if (!paymentInfo.amount) {
+      return;  // Não faz nada se o valor não foi selecionado
+    }
+
     try {
       const response = await axios.post('/api/pix-payment', paymentInfo);
-      setPixUrl(response.data.pixUrl);
-      setQrCode(response.data.qrCode);
+      setPixUrl(response.data.pixUrl);  // Atualiza a URL do PIX
+      setQrCode(response.data.qrCode);  // Atualiza o QR Code do PIX
     } catch (error) {
       console.error('Erro ao gerar pagamento PIX:', error);
       alert('Houve um erro ao gerar o pagamento.');
