@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     const apiUrl = 'https://api.mangofy.com/checkout/pix';  // URL da API da Mangofy
 
     const payload = {
-      client_secret: process.env.MANGOFY_SECRET_KEY,  // A chave secreta configurada
+      client_secret: process.env.25cca9a5795f24cbf2887832f2235780,  // A chave secreta configurada
       orderId,
       amount, // O valor da doação
       customer: customerInfo,  // Informações do cliente
