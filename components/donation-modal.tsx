@@ -19,7 +19,7 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
   const [copied, setCopied] = useState(false)
 
   const handleSelectAmount = async (amount: number) => {
-    console.log("[v0] Selecionado valor:", amount)
+    console.log("[v0] Selecionado valor: R$ " + amount)
     setSelectedAmount(amount)
     setCustomAmount("")
     setLoading(true)
@@ -34,30 +34,43 @@ export function DonationModal({ isOpen, onClose, donationAmounts }: DonationModa
         body: JSON.stringify({ amount }),
       })
 
-      console.log("[v0] Resposta da API:", response.status)
+      console.log("[v0] Status: " + response.status)
 
       const contentType = response.headers.get("content-type")
+
       if (!contentType || !contentType.includes("application/json")) {
-        console.error("[v0] Resposta não é JSON:", contentType)
         const text = await response.text()
-        throw new Error(`Resposta inválida do servidor: ${text.substring(0, 100)}`)
+        console.error("[v0] Resposta não é JSON. Content-Type:", contentType)
+        console.error("[v0] Conteúdo:", text.substring(0, 200))
+        setError("Erro ao conectar com o servidor de pagamento. Tente novamente.")
+        setLoading(false)
+        return
       }
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || `Erro ${response.status}`)
+        console.error("[v0] Erro da API:", errorData)
+        setError(errorData.error || `Erro ${response.status}`)
+        setLoading(false)
+        return
       }
 
       const data = await response.json()
       console.log("[v0] Dados recebidos:", data)
 
+      if (!data.qrCode || !data.pixKey) {
+        console.error("[v0] Dados incompletos:", data)
+        setError("Dados de pagamento incompletos. Tente novamente.")
+        setLoading(false)
+        return
+      }
+
       setQrCode(data.qrCode)
       setPixKey(data.pixKey)
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Erro desconhecido"
-      console.error("[v0] Erro:", errorMsg)
-      setError(errorMsg)
-      setSelectedAmount(null)
+      console.error("[v0] Erro na requisição:", errorMsg)
+      setError("Erro ao gerar QR code. Tente novamente.")
     } finally {
       setLoading(false)
     }
